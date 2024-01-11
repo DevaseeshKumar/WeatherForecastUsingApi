@@ -1,0 +1,73 @@
+<html>
+<head>
+<title>views.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6a8759;}
+.s3 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+views.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">datetime</span>
+<span class="s0">import </span><span class="s1">requests</span>
+<span class="s0">from </span><span class="s1">django.shortcuts </span><span class="s0">import </span><span class="s1">render</span>
+<span class="s0">import </span><span class="s1">json</span>
+<span class="s0">def </span><span class="s1">index(request):</span>
+    <span class="s1">api_key = </span><span class="s2">'4e3bf8ad4566a68b93ef2dcc2759727f'</span>
+    <span class="s1">current_weather_url = </span><span class="s2">'https://api.openweathermap.org/data/2.5/weather?q={}&amp;appid={}'</span>
+    <span class="s1">forecast_url = </span><span class="s2">'https://api.openweathermap.org/data/2.5/forecast?lat={lat}&amp;lon={lon}&amp;cnt=5&amp;appid={api_key}'</span>
+
+    <span class="s0">if </span><span class="s1">request.method == </span><span class="s2">'POST'</span><span class="s1">:</span>
+        <span class="s1">city1 = request.POST[</span><span class="s2">'city1'</span><span class="s1">]</span>
+        <span class="s1">city2 = request.POST.get(</span><span class="s2">'city2'</span><span class="s0">, None</span><span class="s1">)</span>
+
+        <span class="s1">weather_data1</span><span class="s0">, </span><span class="s1">daily_forecasts1 = fetch_weather_and_forecast(city1</span><span class="s0">, </span><span class="s1">api_key</span><span class="s0">, </span><span class="s1">current_weather_url</span><span class="s0">, </span><span class="s1">forecast_url)</span>
+
+        <span class="s0">if </span><span class="s1">city2:</span>
+            <span class="s1">weather_data2</span><span class="s0">, </span><span class="s1">daily_forecasts2 = fetch_weather_and_forecast(city2</span><span class="s0">, </span><span class="s1">api_key</span><span class="s0">, </span><span class="s1">current_weather_url</span><span class="s0">, </span><span class="s1">forecast_url)</span>
+        <span class="s0">else</span><span class="s1">:</span>
+            <span class="s1">weather_data2</span><span class="s0">, </span><span class="s1">daily_forecasts2 = </span><span class="s0">None, None</span>
+
+        <span class="s1">context = {</span>
+            <span class="s2">'weather_data1'</span><span class="s1">: weather_data1</span><span class="s0">,</span>
+            <span class="s2">'daily_forecasts1'</span><span class="s1">: daily_forecasts1</span><span class="s0">,</span>
+            <span class="s2">'weather_data2'</span><span class="s1">: weather_data2</span><span class="s0">,</span>
+            <span class="s2">'daily_forecasts2'</span><span class="s1">: daily_forecasts2</span><span class="s0">,</span>
+        <span class="s1">}</span>
+
+        <span class="s0">return </span><span class="s1">render(request</span><span class="s0">, </span><span class="s2">'weather_app/index.html'</span><span class="s0">, </span><span class="s1">context)</span>
+    <span class="s0">else</span><span class="s1">:</span>
+        <span class="s0">return </span><span class="s1">render(request</span><span class="s0">, </span><span class="s2">'weather_app/index.html'</span><span class="s1">)</span>
+
+<span class="s0">def </span><span class="s1">fetch_weather_and_forecast(city</span><span class="s0">, </span><span class="s1">api_key</span><span class="s0">, </span><span class="s1">current_weather_url</span><span class="s0">, </span><span class="s1">forecast_url):</span>
+    <span class="s1">response = requests.get(current_weather_url.format(city</span><span class="s0">, </span><span class="s1">api_key)).json()</span>
+    <span class="s1">lat</span><span class="s0">, </span><span class="s1">lon = response[</span><span class="s2">'coord'</span><span class="s1">][</span><span class="s2">'lat'</span><span class="s1">]</span><span class="s0">, </span><span class="s1">response[</span><span class="s2">'coord'</span><span class="s1">][</span><span class="s2">'lon'</span><span class="s1">]</span>
+    <span class="s1">forecast_response = requests.get(forecast_url.format(lat=lat</span><span class="s0">, </span><span class="s1">lon=lon</span><span class="s0">, </span><span class="s1">api_key=api_key)).json()</span>
+
+    <span class="s1">weather_data = {</span>
+        <span class="s2">'city'</span><span class="s1">: city</span><span class="s0">,</span>
+        <span class="s2">'temperature'</span><span class="s1">: round(response[</span><span class="s2">'main'</span><span class="s1">][</span><span class="s2">'temp'</span><span class="s1">] - </span><span class="s3">273.15</span><span class="s0">, </span><span class="s3">2</span><span class="s1">)</span><span class="s0">,</span>
+        <span class="s2">'description'</span><span class="s1">: response[</span><span class="s2">'weather'</span><span class="s1">][</span><span class="s3">0</span><span class="s1">][</span><span class="s2">'description'</span><span class="s1">]</span><span class="s0">,</span>
+        <span class="s2">'icon'</span><span class="s1">: response[</span><span class="s2">'weather'</span><span class="s1">][</span><span class="s3">0</span><span class="s1">][</span><span class="s2">'icon'</span><span class="s1">]</span><span class="s0">,</span>
+    <span class="s1">}</span>
+
+    <span class="s1">daily_forecasts = []</span>
+    <span class="s0">for </span><span class="s1">daily_data </span><span class="s0">in </span><span class="s1">forecast_response[</span><span class="s2">'list'</span><span class="s1">]:</span>
+        <span class="s1">daily_forecasts.append({</span>
+            <span class="s2">'day'</span><span class="s1">: datetime.datetime.fromtimestamp(daily_data[</span><span class="s2">'dt'</span><span class="s1">]).strftime(</span><span class="s2">'%A'</span><span class="s1">)</span><span class="s0">,</span>
+            <span class="s2">'min_temp'</span><span class="s1">: round(daily_data[</span><span class="s2">'main'</span><span class="s1">][</span><span class="s2">'temp_min'</span><span class="s1">] - </span><span class="s3">273.15</span><span class="s0">, </span><span class="s3">2</span><span class="s1">)</span><span class="s0">,</span>
+            <span class="s2">'max_temp'</span><span class="s1">: round(daily_data[</span><span class="s2">'main'</span><span class="s1">][</span><span class="s2">'temp_max'</span><span class="s1">] - </span><span class="s3">273.15</span><span class="s0">, </span><span class="s3">2</span><span class="s1">)</span><span class="s0">,</span>
+            <span class="s2">'description'</span><span class="s1">: daily_data[</span><span class="s2">'weather'</span><span class="s1">][</span><span class="s3">0</span><span class="s1">][</span><span class="s2">'description'</span><span class="s1">]</span><span class="s0">,</span>
+            <span class="s2">'icon'</span><span class="s1">: daily_data[</span><span class="s2">'weather'</span><span class="s1">][</span><span class="s3">0</span><span class="s1">][</span><span class="s2">'icon'</span><span class="s1">]</span><span class="s0">,</span>
+        <span class="s1">})</span>
+
+    <span class="s0">return </span><span class="s1">weather_data</span><span class="s0">, </span><span class="s1">daily_forecasts</span></pre>
+</body>
+</html>
